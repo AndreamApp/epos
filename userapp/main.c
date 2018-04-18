@@ -12,7 +12,7 @@
 #include <time.h>
 #include <string.h>
 #include "graphics.h"
-#include "experiment/priority_test.c"
+#include "experiment/thread_test.c"
 
 extern void *tlsf_create_with_pool(void* mem, size_t bytes);
 extern void *g_heap;
@@ -38,7 +38,7 @@ void main(void *pv)
             task_getid(), pv);
 
     //TODO: Your code goes here
-	thread_priority_test();
+	thread_sort_test();
     while(1);
     task_exit(0);
 }
