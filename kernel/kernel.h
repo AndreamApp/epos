@@ -24,6 +24,9 @@
 #include <inttypes.h>
 #include <time.h>
 #include "machdep.h"
+#include "fixedptc.h"
+
+fixedpt g_load_avg;
 
 /*中断向量表*/
 extern void (*g_intr_vector[])(uint32_t irq, struct context *ctx);
@@ -91,6 +94,12 @@ struct tcb {
 
 	int         nice;        //静态优先级，取值范围[-NZERO, NZERO-1]
 #define NZERO 20
+	
+	int priority;            // 表示线程的动态优先级，值越大优先级越高
+#define PRI_USER_MIN 0
+#define PRI_USER_MAX 127
+
+	fixedpt     estcpu;      // 表示线程最近使用了多少CPU时间
 
     uint32_t     signature;  //必须是最后一个字段
 #define TASK_SIGNATURE 0x20160201

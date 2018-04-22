@@ -30,6 +30,7 @@ unsigned volatile g_timer_ticks = 0;
 void isr_timer(uint32_t irq, struct context *ctx)
 {
     g_timer_ticks++;
+
     //sys_putchar('.');
 
     if(g_task_running != NULL) {
@@ -37,6 +38,10 @@ void isr_timer(uint32_t irq, struct context *ctx)
         if(g_task_running->tid == 0) {
             g_resched = 1;
         } else {
+			// estcpu++
+			g_task_running->estcpu = fixedpt_add(g_task_running->estcpu, FIXEDPT_ONE);
+
+			
             //否则，把当前线程的时间片减一
             --g_task_running->timeslice;
 
@@ -45,6 +50,30 @@ void isr_timer(uint32_t irq, struct context *ctx)
                 g_resched = 1;
                 g_task_running->timeslice = TASK_TIMESLICE_DEFAULT;
             }
+			
+			if(g_timer_ticks % HZ == 0){
+				int nready = 0;
+				
+				// re-estimate all threads' estcpu
+				struct tcb *tsk = g_task_head;
+				fixedpt ratio;
+				ratio = fixedpt_mul(FIXEDPT_TWO, g_load_avg);
+				ratio = fixedpt_div(ratio, fixedpt_add(ratio, FIXEDPT_ONE));
+				while(tsk != NULL) {
+					if(tsk->state == TASK_STATE_READY){
+						nready++;
+					}
+					tsk->estcpu = fixedpt_add(fixedpt_mul(ratio, tsk->estcpu),
+														  fixedpt_fromint(tsk->nice));
+					tsk = tsk->next;
+				}
+				
+				// g_load_avg = (59/60)*g_load_avg+(1/60)*nready
+				fixedpt r59_60 = fixedpt_div(fixedpt_fromint(59), fixedpt_fromint(60));
+				fixedpt r01_60 = fixedpt_div(FIXEDPT_ONE,           fixedpt_fromint(60));
+				g_load_avg = fixedpt_add(fixedpt_mul(r59_60, g_load_avg), 
+										 fixedpt_mul(r01_60,  fixedpt_fromint(nready)));
+			}
         }
     }
 }

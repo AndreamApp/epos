@@ -311,7 +311,7 @@ int new_sort_thread(void (*sort)(int block, int * arr, int len), int * arr){
 	return tasks[i].tid;
 }
 
-int debug = 0;
+int debug = 1;
 void init_params(){
 	if(debug) {
 		width = 100;
@@ -345,6 +345,11 @@ void thread_priority_test(){
 	// new thread
 	new_sort_thread(bubble_sort, arr);
 	new_sort_thread(bubble_sort, arr);
+	
+	setpriority(tasks[0].tid, 0);
+	setpriority(tasks[1].tid, 20);
+	
+	printf("%d %d\n", getpriority(tasks[0].tid), getpriority(tasks[1].tid));
 	
 	// wait each of them
 	for(i = 0; i < blocks; i++){

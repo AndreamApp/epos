@@ -422,46 +422,6 @@ time_t sys_elapsed(){
 	return time;
 }
 
-int sys_get_priority(int tid){
-	struct tcb * tsk;
-	if(tid == 0){
-		tid = g_task_running;
-	}
-	else{
-		uint32_t flags;
-		save_flags_cli(flags);
-		tsk = get_task(tid);
-		restore_flags(flags);
-	}
-	
-	int prio = -1;
-	if(tsk != NULL){
-		prio = tsk->nice + NZERO;
-	}
-	return prio;
-}
-
-int sys_set_priority(int tid, int prio){
-	struct tcb * tsk;
-	if(tid == 0){
-		tid = g_task_running;
-	}
-	else{
-		uint32_t flags;
-		save_flags_cli(flags);
-		tsk = get_task(tid);
-		restore_flags(flags);
-	}
-	
-	if(tsk == NULL){
-		return -1;
-	}
-	else{
-		tsk->nice = prio - NZERO;
-		return 0;
-	}
-}
-
 
 /**
  * 系统调用putchar的执行函数
