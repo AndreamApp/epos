@@ -191,6 +191,7 @@ struct tcb *sys_task_create(void *tos,
     new->timeslice = TASK_TIMESLICE_DEFAULT;
     new->wq_exit = NULL;
     new->next = NULL;
+	new->nice = 0;
     new->signature = TASK_SIGNATURE;
 
     /*XXX - should be elsewhere*/

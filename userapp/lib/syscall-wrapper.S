@@ -7,8 +7,10 @@ _ ## name: \
     int $0x82; \
     ret
 
-WRAPPER(elapsed)
 WRAPPER(time)
+WRAPPER(elapsed)
+WRAPPER(getpriority)
+WRAPPER(setpriority)
 WRAPPER(task_exit)
 WRAPPER(task_create)
 WRAPPER(task_getid)

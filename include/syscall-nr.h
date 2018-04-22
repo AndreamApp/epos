@@ -42,5 +42,7 @@
 
 #define SYSCALL_time          2016
 #define SYSCALL_elapsed       2017
+#define SYSCALL_getpriority   2018
+#define SYSCALL_setpriority   2019
 
 #endif /*_SYSCALLNR_H*/

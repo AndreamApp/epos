@@ -89,6 +89,9 @@ struct tcb {
     struct tcb  *next;
     struct fpu   fpu;        //数学协处理器的寄存器
 
+	int         nice;        //静态优先级，取值范围[-NZERO, NZERO-1]
+#define NZERO 20
+
     uint32_t     signature;  //必须是最后一个字段
 #define TASK_SIGNATURE 0x20160201
 };
@@ -157,6 +160,8 @@ int do_page_fault(struct context *ctx, uint32_t vaddr, uint32_t code);
 
 time_t  sys_time();
 time_t  sys_elapsed();
+int     sys_get_priority(int tid);
+int     sys_set_priority(int tid, int prio);
 int     sys_putchar(int c);
 int     sys_getchar();
 
