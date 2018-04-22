@@ -222,6 +222,9 @@ struct tcb *sys_task_create(void *tos,
     new->wq_exit = NULL;
     new->next = NULL;
 	new->nice = 0;
+	new->priority = 0;
+	new->estcpu = fixedpt_fromint(0);
+	new->ticks = 0;
     new->signature = TASK_SIGNATURE;
 
     /*XXX - should be elsewhere*/

@@ -40,6 +40,7 @@ void isr_timer(uint32_t irq, struct context *ctx)
         } else {
 			// estcpu++
 			g_task_running->estcpu = fixedpt_add(g_task_running->estcpu, FIXEDPT_ONE);
+			g_task_running->ticks++;
 
 			
             //否则，把当前线程的时间片减一

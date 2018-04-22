@@ -100,6 +100,7 @@ struct tcb {
 #define PRI_USER_MAX 127
 
 	fixedpt     estcpu;      // 表示线程最近使用了多少CPU时间
+	uint32_t    ticks;       // 线程运行后的滴答数
 
     uint32_t     signature;  //必须是最后一个字段
 #define TASK_SIGNATURE 0x20160201

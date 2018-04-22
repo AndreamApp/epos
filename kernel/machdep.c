@@ -415,10 +415,10 @@ time_t sys_time(){
 /**
  * 系统调用elapsed的执行函数
  *
- * 返回系统启动后经过的毫秒数
+ * 返回该线程运行的毫秒数
  */
 time_t sys_elapsed(){
-	time_t time = g_timer_ticks * 1000 / HZ;
+	time_t time = g_task_running->ticks * 1000 / HZ;
 	return time;
 }
 

@@ -40,10 +40,10 @@ int col_cnt = 2; // 每列显示3个排序函数
 int init_anim_period = 100;
 int finish_anim_period = 100;
 int exit_anim_period = 10;
-int exit_anim_duration = 1500;
+int exit_anim_duration = 500;
 
 float wave_percent = 0.3f;
-int delay_unit = 15;
+int delay_unit = 5;
 int blocks_size = 2;
 //// Configuration
 
@@ -236,7 +236,7 @@ void exit_anim(int b){
 			if(i % (line_cnt / 2) == 0) 
 				msleep(10);
 		}
-		//msleep(100);
+		msleep(10);
 	}
 }
 
@@ -346,8 +346,8 @@ void thread_priority_test(){
 	new_sort_thread(bubble_sort, arr);
 	new_sort_thread(bubble_sort, arr);
 	
-	setpriority(tasks[0].tid, 10);
-	setpriority(tasks[1].tid, 10);
+	setpriority(tasks[0].tid, 5);
+	setpriority(tasks[1].tid, 8);
 	
 	printf("%d %d\n", getpriority(tasks[0].tid), getpriority(tasks[1].tid));
 	
