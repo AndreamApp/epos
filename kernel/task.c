@@ -221,7 +221,7 @@ struct tcb *sys_task_create(void *tos,
     new->timeslice = TASK_TIMESLICE_DEFAULT;
     new->wq_exit = NULL;
     new->next = NULL;
-	new->nice = 0;
+	new->nice = 20;
 	new->priority = 0;
 	new->estcpu = fixedpt_fromint(0);
 	new->ticks = 0;
@@ -330,15 +330,15 @@ void sys_task_yield()
 
 int sys_get_priority(int tid){
 	struct tcb * tsk;
+	uint32_t flags;
+	save_flags_cli(flags);
 	if(tid == 0){
 		tsk = g_task_running;
 	}
 	else{
-		uint32_t flags;
-		save_flags_cli(flags);
 		tsk = get_task(tid);
-		restore_flags(flags);
 	}
+	restore_flags(flags);
 	
 	int prio = -1;
 	if(tsk != NULL){
@@ -349,15 +349,15 @@ int sys_get_priority(int tid){
 
 int sys_set_priority(int tid, int prio){
 	struct tcb * tsk;
+	uint32_t flags;
+	save_flags_cli(flags);
 	if(tid == 0){
 		tsk = g_task_running;
 	}
 	else{
-		uint32_t flags;
-		save_flags_cli(flags);
 		tsk = get_task(tid);
-		restore_flags(flags);
 	}
+	restore_flags(flags);
 	
 	if(tsk == NULL){
 		return -1;
@@ -367,7 +367,6 @@ int sys_set_priority(int tid, int prio){
 		return 0;
 	}
 }
-
 
 /**
  * 初始化多线程子系统

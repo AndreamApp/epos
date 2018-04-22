@@ -311,7 +311,7 @@ int new_sort_thread(void (*sort)(int block, int * arr, int len), int * arr){
 	return tasks[i].tid;
 }
 
-int debug = 0;
+int debug = 1;
 void init_params(){
 	if(debug) {
 		width = 100;
@@ -330,6 +330,73 @@ void init_params(){
 	line_cnt = (int) (block_height / (margin + line_height));
 }
 
+void set_progress(int b, int pro){
+	pro = pro * block_width / 39;
+	
+	int x = b * block_width;
+	int y = 0;
+	int i;
+	for(i = 0; i < 20; i++){
+		line(x, y+i, x+pro, y+i, finish_colors[b]);
+	}
+}
+
+void control(void *p){
+	int p1 = 10, p2 = 10;
+	
+		/*
+	setpriority(tasks[0].tid, p1);
+	setpriority(tasks[1].tid, p2);
+	
+	set_progress(0, p1);
+	set_progress(1, p2);
+	*/
+	
+	#define UP 0x4800
+	#define DOWN 0x5000
+	#define LEFT 0x4b00
+	#define RIGHT 0x4d00
+	#define NZERO 20
+	int key;
+	while(1){
+		key = getchar();
+		printf("input: %d\n", key);
+		if(UP == key){
+			if(p1 < (2 * NZERO - 1)){
+				p1++;
+				setpriority(tasks[0].tid, p1);
+				set_progress(0, p1);
+				printf("set priority: task %d(%d)\n", tasks[0].tid, p1);
+			}
+		}
+		else if(DOWN == key){
+			if(p1 > 0){
+				p1--;
+				setpriority(tasks[0].tid, p1);
+				set_progress(0, p1);
+				printf("set priority: task %d(%d)\n", tasks[0].tid, p1);
+			}
+		}
+		else if(LEFT == key){
+			if(p2 < (2 * NZERO - 1)){
+				p2++;
+				setpriority(tasks[1].tid, p2);
+				set_progress(1, p2);
+				printf("set priority: task %d(%d)\n", tasks[1].tid, p2);
+			}
+		}
+		else if(RIGHT == key){
+			if(p2 > 0){
+				p2--;
+				setpriority(tasks[1].tid, p2);
+				set_progress(1, p2);
+				printf("set priority: task %d(%d)\n", tasks[1].tid, p2);
+			}
+		}
+	}
+	task_exit(0);
+}
+
 void thread_priority_test(){
 	init_params();
 	
@@ -345,11 +412,15 @@ void thread_priority_test(){
 	// new thread
 	new_sort_thread(bubble_sort, arr);
 	new_sort_thread(bubble_sort, arr);
+
 	
-	setpriority(tasks[0].tid, 5);
-	setpriority(tasks[1].tid, 8);
+	unsigned char * stack;
+	unsigned int size = 1024 * 1024;
+	stack = malloc(size);
+	int cid = task_create(stack + size, control, (void*)0);
 	
-	printf("%d %d\n", getpriority(tasks[0].tid), getpriority(tasks[1].tid));
+	task_wait(cid, NULL);
+	free(stack);
 	
 	// wait each of them
 	for(i = 0; i < blocks; i++){
