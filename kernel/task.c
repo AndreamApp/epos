@@ -54,6 +54,10 @@ void schedule(){
 	if(select == NULL){
 		select = task0;
 	}
+	
+	if(select->tid == 4){
+		printk("0x%d -> 0x%d\r\n", (g_task_running == NULL) ? -1 : g_task_running->tid, select->tid);
+	}
 
     if(select->signature != TASK_SIGNATURE)
         printk("warning: kernel stack of task #%d overflow!!!", select->tid);

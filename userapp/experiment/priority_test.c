@@ -33,7 +33,7 @@ anim configuration
 
 //// Configuration
 int margin = 1;
-int line_height = 2;
+int line_height = 6;
 float vertical_weight = 0.9f;
 int col_cnt = 2; // 每列显示3个排序函数
 
@@ -43,7 +43,7 @@ int exit_anim_period = 10;
 int exit_anim_duration = 500;
 
 float wave_percent = 0.3f;
-int delay_unit = 5;
+int delay_unit = 10;
 int blocks_size = 2;
 //// Configuration
 
@@ -311,7 +311,7 @@ int new_sort_thread(void (*sort)(int block, int * arr, int len), int * arr){
 	return tasks[i].tid;
 }
 
-int debug = 1;
+int debug = 0;
 void init_params(){
 	if(debug) {
 		width = 100;
@@ -334,33 +334,32 @@ void set_progress(int b, int pro){
 	pro = pro * block_width / 39;
 	
 	int x = b * block_width;
-	int y = 0;
+	int y = 10;
 	int i;
-	for(i = 0; i < 20; i++){
-		line(x, y+i, x+pro, y+i, finish_colors[b]);
+	for(i = 0; i < 3; i++){
+		line(x, y+i, x+block_width, y+i, RGB(0, 0, 0));
+		line(x, y+i, x+pro, y+i, active_colors[b]);
 	}
 }
 
 void control(void *p){
 	int p1 = 10, p2 = 10;
 	
-		/*
+	setpriority(task_getid(), 0);
 	setpriority(tasks[0].tid, p1);
 	setpriority(tasks[1].tid, p2);
 	
 	set_progress(0, p1);
 	set_progress(1, p2);
-	*/
 	
 	#define UP 0x4800
 	#define DOWN 0x5000
-	#define LEFT 0x4b00
-	#define RIGHT 0x4d00
+	#define LEFT 0x4d00
+	#define RIGHT 0x4b00
 	#define NZERO 20
 	int key;
 	while(1){
 		key = getchar();
-		printf("input: %d\n", key);
 		if(UP == key){
 			if(p1 < (2 * NZERO - 1)){
 				p1++;
