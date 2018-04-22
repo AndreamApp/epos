@@ -34,7 +34,7 @@ anim configuration
 //// Configuration
 int margin = 1;
 int line_height = 2;
-float vertical_weight = 0.8f;
+float vertical_weight = 0.9f;
 int col_cnt = 2; // 每列显示3个排序函数
 
 int init_anim_period = 100;
@@ -44,23 +44,23 @@ int exit_anim_duration = 1500;
 
 float wave_percent = 0.3f;
 int delay_unit = 15;
-int sort_methods_size = 2;
+int blocks_size = 2;
 //// Configuration
 
 COLORREF init_colors[MAX] = {
-	RGB(214, 188, 255), RGB(220, 247, 161), RGB(255, 120, 120), RGB(186, 212, 170), RGB(172, 208, 206), RGB(247, 223, 131), 
+	RGB(172, 208, 206), RGB(247, 223, 131), 
 };
 COLORREF active_colors[MAX] = {
-	RGB(191, 134, 171), RGB(131, 252, 216), RGB(120, 180, 250), RGB(212, 212, 170), RGB(77, 147, 159), RGB(247, 185, 131), 
+	RGB(77, 147, 159), RGB(247, 185, 131), 
 };
 COLORREF finish_colors[MAX] = {
-	RGB(218, 106, 135), RGB(129, 146, 214), RGB(86, 163, 108), RGB(124, 99, 84), RGB(59, 62, 71), RGB(247, 147, 131), 
+	RGB(59, 62, 71), RGB(247, 147, 131), 
 };
 COLORREF highlight_colors[MAX] = {
-	RGB(218, 106, 135), RGB(129, 146, 214), RGB(46, 104, 170), RGB(124, 99, 84), RGB(59, 62, 71), RGB(247, 147, 131), 
+	RGB(59, 62, 71), RGB(247, 147, 131), 
 };
 COLORREF intense_colors[MAX] = {
-	RGB(0, 2, 0),       RGB(2, 0, 0),       RGB(2, 0, 0),      RGB(0, 0, 2),        RGB(2, 0, 0),       RGB(0, 0, 3),
+	RGB(2, 0, 0),       RGB(0, 0, 3),
 };
 int hightlight_line[MAX];
 
@@ -70,11 +70,18 @@ int block_height;
 int marginTop;
 int line_cnt;
 
-int blocks;
-int * arrs[MAX];
 
 int draw_left_bound_cache[MAX][1000];
 int draw_right_bound_cache[MAX][1000];
+
+int blocks;
+int * arrs[MAX];
+struct sort_task{
+	void (*sort_method)(int block, int * arr, int len);
+	int * arr; // 待排序数组
+	int block; // 在哪块区域绘制
+	int tid;
+};
 
 /**
  * 休眠msec毫秒
@@ -211,7 +218,7 @@ void exit_anim(int b){
 	while((curr = elapsed())){
 		// color is merged by two finish_colors, and the merge weight change by time continuously
 		color_percent = color_interpolator((curr - start) / (float)(exit_anim_duration));
-		base_color = merge_color(finish_colors[(b + 1) % sort_methods_size], finish_colors[b], color_percent);
+		base_color = merge_color(finish_colors[(b + 1) % blocks_size], finish_colors[b], color_percent);
 		for(i = 0; i < line_cnt; i++){
 			// make lines move around the middle point periodly
 			// the delay makes the trinkle effect
@@ -259,11 +266,8 @@ void swap(int b, int i, int j){
 	msleep(10);
 }
 
-void bubble_sort(void * p){
-	int b = 0;
-	int * arr = arrs[b];
-	int len = line_cnt;
-	init_anim(b);
+void bubble_sort(int b, int * arr, int len){
+	printf("sort %d\n", b);
 	int i, j;
 	for(i = 0; i < len; i++){
 		for(j = len-1; j > 0; j--){
@@ -272,178 +276,40 @@ void bubble_sort(void * p){
 			}
 		}
 	}
-	finish_anim(b);
-	task_exit(0);
-}
-
-void insertion_sort(void * p){
-	int b = 1;
-	int * arr = arrs[b];
-	int len = line_cnt;
-	init_anim(b);
-	int i, j;
-	for(i = 1; i < len; i++){
-		for(j = i; j > 0 && arr[j] < arr[j-1]; j--){
-			swap(b, j, j-1);
-		}
-	}
-	finish_anim(b);
-	task_exit(0);
-}
-
-
-// 希尔排序
-// 用于希尔排序的插入排序，incr为步长
-void inssort4shell(int * arr, int b, int n, int incr) {
-	int i, j;
-	for (i = incr; i<n; i += incr)
-		for (j = i; (j >= incr) && (arr[j] < arr[j - incr]); j -= incr)
-			swap(b, j, j - incr);
-}
-
-void _shell_sort(int b, int n) { // 希尔排序
-	int * arr = arrs[b];
-	int i, j;
-	for (i = n / 2; i >= 2; i /= 2)      // i是步长，将数组分为i个较为分散的子数组
-		for (j = 0; j < i; j++)       // 对这i个数组分别排序
-			inssort4shell(&arr[j], b, n - j, i);
-	// 最后来一次汇总式的插入排序，因为数组已经基本有序，所以复杂度没有O(n^2)那么高
-	inssort4shell(arr, b, n, 1);
-}
-
-void shell_sort(void *p){
-	int b = 2;
-	init_anim(b);
-	_shell_sort(b, line_cnt);
-	finish_anim(b);
-	task_exit(0);
-}
-
-void selection_sort(void * p){
-	int b = 3;
-	int * arr = arrs[b];
-	int len = line_cnt;
-	int i, j;
-	init_anim(b);
-	for(i = 0; i < len-1; i++){
-		int low = i;
-		for(j = i+1; j < len; j++){
-			// set highlight in selection
-			draw_highlight_line(b, j);
-			msleep(9);
-			if(arr[j] < arr[low]){
-				low = j;
-				msleep(10);
-			}
-		}
-		swap(b, i, low);
-	}
-	finish_anim(b);
-	task_exit(0);
-}
-
-void _merge_sort(int * arr, int * tmp, int left, int right){
-	if(left >= right) return;
-	int mid = (left+right) / 2;
-	_merge_sort(arr, tmp, left, mid);
-	_merge_sort(arr, tmp, mid+1, right);
-	int i, j, curr;
-	for(i = 0; i < line_cnt; i++){
-		tmp[i] = arr[i];
-	}
-	i = left, j = mid+1;
-	for(curr = left; curr <= right; curr++){
-		if(i == mid+1) arr[curr] = tmp[j++];
-		else if(j > right) arr[curr] = tmp[i++];
-		else if(tmp[i] < tmp[j]) arr[curr] = tmp[i++];
-		else arr[curr] = tmp[j++];
-		
-		// set highlight
-		draw_highlight_line(4, curr);
-		msleep(10);
-	}
-	//printf("end merge %d-%d\n", left, right);
-}
-
-void merge_sort(void *p){
-	int b = 4;
-	int * arr = arrs[b];
-	int * tmp = (int *)malloc(line_cnt * (sizeof arr));
-	init_anim(b);
-	_merge_sort(arr, tmp, 0, line_cnt-1);
-	finish_anim(b);
-	task_exit(0);
-}
-
-
-// 划分数组，以pivot为比较对象，小的往左边放，大的往右边放
-// 返回划分点的下标
-int partition(int b, int l, int r, int pivot) {
-	int * arr = arrs[b];
-	do {             // l 和 r将不断靠近，直到相遇
-		while (arr[++l] < pivot);  // 从左向右找到一个比pivot大的数！
-		while ((l < r) && pivot < arr[--r]); // 从右向左找到一个比pivot小的数！
-		swap(b, l, r);              // 让他们俩交换！
-	} while (l < r);              // 重复进行
-	return l;      // 最后l==r，也就是划分点
-}
-
-// 快速排序核心函数
-void _quick_sort(int b, int i, int j) {
-	if (j <= i) return; // 只有0个或1个元素的数组是有序的
-	int pivotindex = (i+j) / 2;
-	int * arr = arrs[b];
-	swap(b, pivotindex, j);    // 将支点移到数组尾部
-	// 对数组进行划分，结束后满足：[i,k) < pivot  &&  [k,j] > pivot
-	int k = partition(b, i - 1, j, arr[j]);
-	swap(b, k, j);             // 把支点的值换回来
-	_quick_sort(b, i, k - 1); // 对左边继续快排
-	_quick_sort(b, k + 1, j); // 对右边继续快排
-}
-
-void quick_sort(void *p){
-	int b = 5;
-	init_anim(b);
-	_quick_sort(b, 0, line_cnt-1);
-	finish_anim(b);
-	task_exit(0);
 }
 
 //////////////////////////////////////////////
 // SORT API
 //////////////////////////////////////////////
 
+struct sort_task tasks[MAX];
+
 void sort_wrapper(void *p){
-	void (*sort)(int * arr, int len) = p;
-	int b = 5;
-	init_anim(b);
-	sort(arrs[b], line_cnt);
-	finish_anim(b);
+	struct sort_task * task = (struct sort_task*) p;
+	init_anim(task->block);
+	task->sort_method(task->block, task->arr, line_cnt);
+	finish_anim(task->block);
 	task_exit(0);
 }
 
-int new_sort_thread(void (*sort)(void* p), int * arr){
+int new_sort_thread(void (*sort)(int block, int * arr, int len), int * arr){
 	unsigned char * stack;
 	unsigned int size = 1024 * 1024;
 	stack = malloc(size);
 	// copy array
 	int * arrcpy = malloc(line_cnt * (sizeof arr));
 	memcpy(arrcpy, arr, line_cnt * (sizeof arr));
-	arrs[blocks++] = arrcpy;
+	
+	int i = blocks++;
+	arrs[i] = arrcpy;
+	tasks[i].sort_method = sort;
+	tasks[i].arr = arrcpy;
+	tasks[i].block = i;
+	
 	// new thread
-	int tid = task_create(stack + size, sort, (void*)(0));
-	return tid;
+	tasks[i].tid = task_create(stack + size, sort_wrapper, (void*)(&tasks[i]));
+	return tasks[i].tid;
 }
-
-void (*sort_methods[MAX])(void *p) = {
-	bubble_sort,
-	insertion_sort,
-	shell_sort,
-	selection_sort,
-	merge_sort,
-	quick_sort,
-};
-int sort_thread_tids[MAX];
 
 int debug = 0;
 void init_params(){
@@ -457,7 +323,7 @@ void init_params(){
 		width = g_graphic_dev.XResolution;
 		height = g_graphic_dev.YResolution;
 	}
-	int blocks = sort_methods_size;
+	int blocks = blocks_size;
 	block_width = (width / col_cnt);
 	block_height = (int) (height * vertical_weight / (blocks / col_cnt + (blocks % col_cnt != 0)));
 	marginTop = (int) (block_height * (1 - vertical_weight));
@@ -477,14 +343,13 @@ void thread_priority_test(){
 	}
 	
 	// new thread
-	for(i = 0; i < sort_methods_size; i++){
-		sort_thread_tids[i] = new_sort_thread(sort_methods[i], arr);
-	}
+	new_sort_thread(bubble_sort, arr);
+	new_sort_thread(bubble_sort, arr);
 	
 	// wait each of them
-	for(i = 0; i < sort_methods_size; i++){
-		task_wait(sort_thread_tids[i], NULL);
-		free(arrs[i]);
+	for(i = 0; i < blocks; i++){
+		task_wait(tasks[i].tid, NULL);
+		free(tasks[i].arr);
 	}
 	
 	free(arr);
