@@ -236,7 +236,7 @@ void exit_anim(int b){
 			if(i % (line_cnt / 2) == 0) 
 				msleep(10);
 		}
-		msleep(100);
+		//msleep(100);
 	}
 }
 
@@ -263,7 +263,7 @@ void swap(int b, int i, int j){
 	color_line(b, i, active_colors[b]);
 	// highlight the last swap line
 	draw_highlight_line(b, j);
-	msleep(10);
+	msleep(9);
 }
 
 void bubble_sort(int b, int * arr, int len){
@@ -311,7 +311,7 @@ int new_sort_thread(void (*sort)(int block, int * arr, int len), int * arr){
 	return tasks[i].tid;
 }
 
-int debug = 1;
+int debug = 0;
 void init_params(){
 	if(debug) {
 		width = 100;
@@ -346,8 +346,8 @@ void thread_priority_test(){
 	new_sort_thread(bubble_sort, arr);
 	new_sort_thread(bubble_sort, arr);
 	
-	setpriority(tasks[0].tid, 0);
-	setpriority(tasks[1].tid, 20);
+	setpriority(tasks[0].tid, 10);
+	setpriority(tasks[1].tid, 10);
 	
 	printf("%d %d\n", getpriority(tasks[0].tid), getpriority(tasks[1].tid));
 	

@@ -32,24 +32,54 @@ struct tcb *g_task_own_fpu;
  *
  * 注意：该函数的执行不能被中断
  */
-void schedule()
+void schedule(){
+    struct tcb *tsk = g_task_head;
+    struct tcb *select = NULL;
+	while(tsk != NULL){
+		tsk->priority = PRI_USER_MAX - 
+                 fixedpt_toint(fixedpt_div(tsk->estcpu, fixedpt_fromint(4))) - 
+                 tsk->nice*2;
+		// 选择除task0之外的优先级最高的线程，若没有，则select为空
+		if(tsk->tid != 0 && tsk->state == TASK_STATE_READY && (select == NULL || tsk->priority > select->priority)){
+			select = tsk;
+		}
+		tsk = tsk->next;
+	}
+	
+	if(select == g_task_running){
+		if(select->state == TASK_STATE_READY)
+			return;
+	}
+	
+	if(select == NULL){
+		select = task0;
+	}
+
+    if(select->signature != TASK_SIGNATURE)
+        printk("warning: kernel stack of task #%d overflow!!!", select->tid);
+
+    g_resched = 0;
+    switch_to(select);
+}
+ 
+void schedule_round_robin()
 {
     struct tcb *select = g_task_running;
     do {
         select = select->next;
         if(select == NULL)
             select = g_task_head;
-        if(select == g_task_running)
+        if(select == g_task_running) // 找不到ready线程
             break;
         if((select->tid != 0) &&
-           (select->state == TASK_STATE_READY))
+           (select->state == TASK_STATE_READY)) // 找到running之后的第一个ready线程
             break;
     } while(1);
 
     if(select == g_task_running) {
-        if(select->state == TASK_STATE_READY)
+        if(select->state == TASK_STATE_READY) // 只有一个ready线程，且正在执行，无需调度
             return;
-        select = task0;
+        select = task0; // 没有ready线程，执行task0
     }
 
     //printk("0x%d -> 0x%d\r\n", (g_task_running == NULL) ? -1 : g_task_running->tid, select->tid);
