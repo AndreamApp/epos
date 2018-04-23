@@ -33,14 +33,14 @@ anim configuration
 
 //// Configuration
 int margin = 1;
-int line_height = 6;
+int line_height = 3;
 float vertical_weight = 0.9f;
 int col_cnt = 2; // 每列显示3个排序函数
 
 int init_anim_period = 100;
 int finish_anim_period = 100;
 int exit_anim_period = 10;
-int exit_anim_duration = 500;
+int exit_anim_duration = 800;
 
 float wave_percent = 0.3f;
 int delay_unit = 10;
@@ -233,8 +233,6 @@ void exit_anim(int b){
 			margin_left = (int)(move * move_interpolator(move_percent));
 			
 			color_line_with_margin(b, i, margin_left, intense(b, i, base_color));
-			if(i % (line_cnt / 2) == 0) 
-				msleep(10);
 		}
 		msleep(10);
 	}

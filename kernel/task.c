@@ -32,32 +32,64 @@ struct tcb *g_task_own_fpu;
  *
  * 注意：该函数的执行不能被中断
  */
+#define KEEP_RUNNING_THRESH 5
+int keep_running_start_ticks = 0;
+int keep_running_curr_ticks = 0;
 void schedule(){
     struct tcb *tsk = g_task_head;
     struct tcb *select = NULL;
 	while(tsk != NULL){
 		tsk->priority = PRI_USER_MAX - 
-                 fixedpt_toint(fixedpt_div(tsk->estcpu, fixedpt_fromint(4))) - 
-                 tsk->nice*2;
-		// 选择除task0之外的优先级最高的线程，若没有，则select为空
-		if(tsk->tid != 0 && tsk->state == TASK_STATE_READY && (select == NULL || tsk->priority > select->priority)){
+                 //fixedpt_toint(fixedpt_div(tsk->estcpu, fixedpt_fromint(4))) - 
+                 fixedpt_toint(tsk->estcpu) / 4 - 
+                 (tsk->nice)*2;
+		// 选择除task0和running之外的优先级最高的线程，若没有，则select为空
+		if(tsk->tid != 0 && tsk != g_task_running && tsk->state == TASK_STATE_READY && (select == NULL || tsk->priority > select->priority)){
 			select = tsk;
 		}
 		tsk = tsk->next;
 	}
 	
-	if(select == g_task_running){
-		if(select->state == TASK_STATE_READY)
-			return;
-	}
+	keep_running_curr_ticks = g_task_running->ticks;
+	int keep_running = 0;
 	
 	if(select == NULL){
-		select = task0;
+		if(g_task_running->state == TASK_STATE_READY){
+			keep_running = 1;
+		}
+		else{
+			select = task0;
+		}
+	}
+	else{
+		if(g_task_running->state == TASK_STATE_READY){
+			// 不允许一个线程执行时间超过KEEP_RUNNING_THRESH
+			if((keep_running_curr_ticks - keep_running_start_ticks) >= KEEP_RUNNING_THRESH){
+				keep_running = 0;
+			}
+			else if(select->priority < g_task_running->priority){
+				keep_running = 1;
+			}
+		}
 	}
 	
-	if(select->tid == 4){
-		printk("0x%d -> 0x%d\r\n", (g_task_running == NULL) ? -1 : g_task_running->tid, select->tid);
+	if(keep_running){
+		return;
 	}
+	else{
+		keep_running_start_ticks = select->ticks;
+		keep_running_curr_ticks = select->ticks;
+	}
+	
+	/*
+	if(g_task_running != select && select->tid == 4){
+		printk("0x%d -> 0x%d\r\n", (g_task_running == NULL) ? -1 : g_task_running->tid, select->tid);
+		printk("  prio: %d -> %d", g_task_running->priority, select->priority);
+		printk("  nice: %d -> %d\r\n", g_task_running->nice, select->nice);
+		printk("  est: %d -> %d", g_task_running->estcpu, select->estcpu);
+		printk("  ticks: %d -> %d\r\n", g_task_running->ticks, select->ticks);
+	}
+	*/
 
     if(select->signature != TASK_SIGNATURE)
         printk("warning: kernel stack of task #%d overflow!!!", select->tid);
@@ -333,6 +365,7 @@ void sys_task_yield()
 }
 
 int sys_get_priority(int tid){
+	disable_irq(0);
 	struct tcb * tsk;
 	uint32_t flags;
 	save_flags_cli(flags);
@@ -348,10 +381,12 @@ int sys_get_priority(int tid){
 	if(tsk != NULL){
 		prio = tsk->nice + NZERO;
 	}
+	enable_irq(0);
 	return prio;
 }
 
 int sys_set_priority(int tid, int prio){
+	disable_irq(0);
 	struct tcb * tsk;
 	uint32_t flags;
 	save_flags_cli(flags);
@@ -363,6 +398,7 @@ int sys_set_priority(int tid, int prio){
 	}
 	restore_flags(flags);
 	
+	enable_irq(0);
 	if(tsk == NULL){
 		return -1;
 	}

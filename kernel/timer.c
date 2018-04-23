@@ -66,8 +66,11 @@ void isr_timer(uint32_t irq, struct context *ctx)
 					}
 					tsk->estcpu = fixedpt_add(fixedpt_mul(ratio, tsk->estcpu),
 														  fixedpt_fromint(tsk->nice));
+					printk(" tsk%d->estcpu=%d\r\n", tsk->tid, tsk->estcpu);
 					tsk = tsk->next;
 				}
+				
+				//printk(" ratio=%d g_load_avg=%d  nready=%d\r\n", ratio, g_load_avg, nready);
 				
 				// g_load_avg = (59/60)*g_load_avg+(1/60)*nready
 				fixedpt r59_60 = fixedpt_div(fixedpt_fromint(59), fixedpt_fromint(60));
