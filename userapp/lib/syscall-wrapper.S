@@ -8,7 +8,7 @@ _ ## name: \
     ret
 
 WRAPPER(sem_create)
-WRAPPER(sem_destory)
+WRAPPER(sem_destroy)
 WRAPPER(sem_wait)
 WRAPPER(sem_signal)
 WRAPPER(time)

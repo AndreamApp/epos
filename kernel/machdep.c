@@ -640,7 +640,7 @@ void syscall(struct context *ctx)
 		ctx->eax = sys_sem_create(value);
 	}
 	break;
-	case SYSCALL_sem_destory:
+	case SYSCALL_sem_destroy:
 	{
 		int semid = *((int *)(ctx->esp+4));
 		ctx->eax = sys_sem_destroy(semid);

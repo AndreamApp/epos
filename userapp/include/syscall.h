@@ -17,7 +17,7 @@ int sem_create(int value);
  * semid: 信号量id
  * 成功返回0，失败返回-1
  */
-int sem_destory(int semid);
+int sem_destroy(int semid);
 /**
  * p操作，等待信号触发
  * semid: 信号量id
