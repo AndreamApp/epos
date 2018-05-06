@@ -49,21 +49,6 @@ int delay_unit = 2;
 int blocks_size = 10;
 //// Configuration
 
-COLORREF init_colors[MAX] = {
-	RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), 
-};
-COLORREF active_colors[MAX] = {
-	RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), 
-};
-COLORREF finish_colors[MAX] = {
-	RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), 
-};
-COLORREF highlight_colors[MAX] = {
-	RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), 
-};
-COLORREF intense_colors[MAX] = {
-	RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),
-};
 COLORREF get_init_color(int b){
 	return RGB(172, 208, 206);
 }
@@ -332,7 +317,7 @@ int new_sort_thread(void (*sort)(int block, int * arr, int len), int * arr){
 	return tasks[i].tid;
 }
 
-int debug = 0;
+int debug = 1;
 void init_params(){
 	if(debug) {
 		width = 100;
@@ -419,6 +404,37 @@ void control(void *p){
 	task_exit(0);
 }
 
+int full;
+int empty;
+
+// 每秒产生一个资源
+void produce(void *p){
+	int i;
+	for(i = 0; ;i++, i %= blocks_size){
+		sem_wait(empty);
+		
+		printf("produce %d\n", i);
+		
+		sem_signal(full);
+		
+		msleep(1000);
+	}
+}
+
+// 每两秒消耗一个资源
+void consume(void *p){
+	int i;
+	for(i = 0; ;i++, i %= blocks_size){
+		sem_wait(full);
+		
+		printf("consume %d\n", i);
+		
+		sem_signal(empty);
+		
+		msleep(2000);
+	}
+}
+
 void sem_test(){
 	init_params();
 	
@@ -431,29 +447,21 @@ void sem_test(){
 		arr[i] = rand() % (block_width - 2); // 为了避免图像边缘重叠，长度-2
 	}
 	
-	// new thread
-	for(i = 0; i < blocks_size; i++){
-		new_sort_thread(bubble_sort, arr);
-	}
-
-	/*
-	unsigned char * stack;
+	// 创建两个信号量，有多少个资源就设置empty值为多少
+	full = sem_create(0);
+	empty = sem_create(blocks_size);
+	
 	unsigned int size = 1024 * 1024;
-	stack = malloc(size);
-	int cid = task_create(stack + size, control, (void*)0);
+	unsigned char * produce_stack = (unsigned char *) malloc(size);
+	int pid = task_create(produce_stack + size, produce, (void*)0);
 	
+	unsigned char * consume_stack = (unsigned char *) malloc(size);
+	int cid = task_create(consume_stack + size, consume, (void*)0);
+	
+	//control((void*)0);
+	
+	task_wait(pid, NULL);
 	task_wait(cid, NULL);
-	free(stack);
-	*/
-	control((void*)0);
-	
-	// wait each of them
-	for(i = 0; i < blocks; i++){
-		task_wait(tasks[i].tid, NULL);
-		free(tasks[i].arr);
-	}
-	
-	free(arr);
 	
 	exit_graphic();
 }

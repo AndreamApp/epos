@@ -78,10 +78,6 @@ void schedule(){
 		return;
 	}
 	else{
-		int ticks = (keep_running_curr_ticks - keep_running_start_ticks);
-		if(ticks == 5){
-		printk("scheduled: recently tsk%d keep running %d ticks\n", g_task_running->tid, ticks);
-		}
 		keep_running_start_ticks = select->ticks;
 		keep_running_curr_ticks = select->ticks;
 	}
