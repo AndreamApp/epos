@@ -7,6 +7,10 @@ _ ## name: \
     int $0x82; \
     ret
 
+WRAPPER(sem_create)
+WRAPPER(sem_destory)
+WRAPPER(sem_wait)
+WRAPPER(sem_signal)
 WRAPPER(time)
 WRAPPER(elapsed)
 WRAPPER(getpriority)

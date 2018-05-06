@@ -625,14 +625,37 @@ void syscall(struct context *ctx)
 	{
 		int tid = *((int *)(ctx->esp+4));
 		ctx->eax = sys_get_priority(tid);
-		break;
 	}
+	break;
 	case SYSCALL_setpriority:
 	{
 		int tid = *((int *)(ctx->esp+4));
 		int prio = *((int *)(ctx->esp+8));
 		ctx->eax = sys_set_priority(tid, prio);
-		break;
+	}
+	break;
+	case SYSCALL_sem_create:
+	{
+		int value = *((int *)(ctx->esp+4));
+		ctx->eax = sys_sem_create(value);
+	}
+	break;
+	case SYSCALL_sem_destory:
+	{
+		int semid = *((int *)(ctx->esp+4));
+		ctx->eax = sys_sem_destroy(semid);
+	}
+	break;
+	case SYSCALL_sem_wait:
+	{
+		int semid = *((int *)(ctx->esp+4));
+		ctx->eax = sys_sem_wait(semid);
+	}
+	break;
+	case SYSCALL_sem_signal:
+	{
+		int semid = *((int *)(ctx->esp+4));
+		ctx->eax = sys_sem_signal(semid);
 	}
 	break;
     case SYSCALL_task_exit:

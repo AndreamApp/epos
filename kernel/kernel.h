@@ -168,6 +168,32 @@ extern uint32_t g_ram_zone[RAM_ZONE_LEN];
 
 int do_page_fault(struct context *ctx, uint32_t vaddr, uint32_t code);
 
+
+/**
+ * 创建信号量
+ * value: 信号量初始值
+ * 返回信号量id
+ */
+int sys_sem_create(int value);
+/**
+ * 销毁信号量
+ * semid: 信号量id
+ * 成功返回0，失败返回-1
+ */
+int sys_sem_destory(int semid);
+/**
+ * p操作，等待信号触发
+ * semid: 信号量id
+ * 成功返回0，失败返回-1
+ */
+int sys_sem_wait(int semid);
+/**
+ * v操作，触发信号
+ * semid: 信号量id
+ * 成功返回0，失败返回-1
+ */
+int sys_sem_signal(int semid);
+
 time_t  sys_time();
 time_t  sys_elapsed();
 int     sys_get_priority(int tid);

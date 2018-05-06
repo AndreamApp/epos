@@ -6,6 +6,31 @@
 #include <time.h>
 #include <ioctl.h>
 
+/**
+ * 创建信号量
+ * value: 信号量初始值
+ * 返回信号量id
+ */
+int sem_create(int value);
+/**
+ * 销毁信号量
+ * semid: 信号量id
+ * 成功返回0，失败返回-1
+ */
+int sem_destory(int semid);
+/**
+ * p操作，等待信号触发
+ * semid: 信号量id
+ * 成功返回0，失败返回-1
+ */
+int sem_wait(int semid);
+/**
+ * v操作，触发信号
+ * semid: 信号量id
+ * 成功返回0，失败返回-1
+ */
+int sem_signal(int semid);
+
 int setpriority(int tid, int prio);
 int getpriority(int tid);
 time_t  time(time_t  *loc);
