@@ -35,12 +35,12 @@ void isr_timer(uint32_t irq, struct context *ctx)
 
     if(g_task_running != NULL) {
         //如果是task0在运行，则强制调度
+		g_task_running->ticks++;
         if(g_task_running->tid == 0) {
             g_resched = 1;
         } else {
 			// estcpu++
 			g_task_running->estcpu = fixedpt_add(g_task_running->estcpu, FIXEDPT_ONE);
-			g_task_running->ticks++;
 
 			
             //否则，把当前线程的时间片减一
@@ -52,7 +52,7 @@ void isr_timer(uint32_t irq, struct context *ctx)
                 g_task_running->timeslice = TASK_TIMESLICE_DEFAULT;
             }
 			
-			if(g_timer_ticks % HZ == 0){
+			if(g_timer_ticks % (HZ) == 0){
 				int nready = 0;
 				
 				// re-estimate all threads' estcpu
@@ -66,9 +66,11 @@ void isr_timer(uint32_t irq, struct context *ctx)
 					}
 					tsk->estcpu = fixedpt_add(fixedpt_mul(ratio, tsk->estcpu),
 														  fixedpt_fromint(tsk->nice));
-					printk(" tsk%d->estcpu=%d\r\n", tsk->tid, tsk->estcpu);
+					//printk(" tsk%d->estcpu=%d\r\n", tsk->tid, tsk->estcpu);
 					tsk = tsk->next;
 				}
+				
+				nready = 3;
 				
 				//printk(" ratio=%d g_load_avg=%d  nready=%d\r\n", ratio, g_load_avg, nready);
 				
@@ -199,6 +201,7 @@ unsigned sys_sleep(unsigned seconds)
 
 int sys_nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
+	//printk("nanosleep %ds %dns\n", rqtp->tv_sec, rqtp->tv_nsec);
     if(rqtp->tv_sec > 0)
         do_sleep(rqtp->tv_sec, 1);
     if(rqtp->tv_nsec > 0)

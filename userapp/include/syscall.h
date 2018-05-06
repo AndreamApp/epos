@@ -6,6 +6,8 @@
 #include <time.h>
 #include <ioctl.h>
 
+int setpriority(int tid, int prio);
+int getpriority(int tid);
 time_t  time(time_t  *loc);
 time_t  elapsed();
 int task_exit(int code_exit);

@@ -29,41 +29,61 @@ layout configuration
 anim configuration
 */
 
-#define MAX 10
+#define MAX 25
 
 //// Configuration
 //// Feel free to change these configs
 int margin = 1;
 int line_height = 3;
 float vertical_weight = 0.9f;
-int col_cnt = 2; // 每列显示3个排序函数
-int swap_period = 5;
+int col_cnt = 10; // 每列显示3个排序函数
+int swap_period = 10;
 
 int init_anim_period = 10;
 int finish_anim_period = 10;
 int exit_anim_period = 10;
-int exit_anim_duration = 700;
+int exit_anim_duration = 200;
 
 float wave_percent = 0.3f;
-int delay_unit = 10;
-int blocks_size = 2;
+int delay_unit = 2;
+int blocks_size = 10;
 //// Configuration
 
 COLORREF init_colors[MAX] = {
-	RGB(172, 208, 206), RGB(247, 223, 131), 
+	RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), RGB(172, 208, 206), RGB(247, 223, 131), 
 };
 COLORREF active_colors[MAX] = {
-	RGB(77, 147, 159), RGB(247, 185, 131), 
+	RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), RGB(77, 147, 159), RGB(247, 185, 131), 
 };
 COLORREF finish_colors[MAX] = {
-	RGB(59, 62, 71), RGB(247, 147, 131), 
+	RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), 
 };
 COLORREF highlight_colors[MAX] = {
-	RGB(59, 62, 71), RGB(247, 147, 131), 
+	RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), RGB(59, 62, 71), RGB(247, 147, 131), 
 };
 COLORREF intense_colors[MAX] = {
-	RGB(1, 0, 0),       RGB(0, 1, 0),
+	RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),RGB(1, 0, 0),       RGB(0, 1, 0),
 };
+COLORREF get_init_color(int b){
+	return RGB(172, 208, 206);
+}
+
+COLORREF get_active_color(int b){
+	return RGB(77, 147, 159);
+}
+
+COLORREF get_finish_color(int b){
+	return RGB(59, 62, 71);
+}
+
+COLORREF get_highlight_color(int b){
+	return RGB(59, 62, 71);
+}
+
+COLORREF get_intense_color(int b){
+	return RGB(0, 0, 0);
+}
+
 int hightlight_line[MAX];
 
 int width, height;
@@ -101,9 +121,9 @@ int msleep(const uint32_t msec)
 
 // for gradient
 COLORREF intense(int b, int i, COLORREF color){
-	int R = getRValue(color) + i * getRValue(intense_colors[b]);
-	int G = getGValue(color) + i * getGValue(intense_colors[b]);
-	int B = getBValue(color) + i * getBValue(intense_colors[b]);
+	int R = getRValue(color) + i * getRValue(get_intense_color(b));
+	int G = getGValue(color) + i * getGValue(get_intense_color(b));
+	int B = getBValue(color) + i * getBValue(get_intense_color(b));
 	if((R / 255) & 1){
 		R = 255 - (R % 255);
 	}
@@ -177,10 +197,10 @@ void color_line(int b, int i, COLORREF color){
  */
 void draw_highlight_line(int b, int i){
 	// disable origin highlight
-	color_line(b, hightlight_line[b], active_colors[b]);
+	color_line(b, hightlight_line[b], get_active_color(b));
 	// highlight line i
 	hightlight_line[b] = i;
-	color_line(b, i, highlight_colors[b]);
+	color_line(b, i, get_highlight_color(b));
 }
 //////////////////////////////////////////////
 // DRAW API
@@ -193,7 +213,7 @@ void draw_highlight_line(int b, int i){
 void init_anim(int b){
 	int i;
 	for(i = 0; i < line_cnt; i++){
-		color_line(b, i, init_colors[b]);
+		color_line(b, i, get_init_color(b));
 		msleep(init_anim_period);
 	}
 }
@@ -221,7 +241,7 @@ void exit_anim(int b){
 	while((curr = elapsed())){
 		// color is merged by two finish_colors, and the merge weight change by time continuously
 		color_percent = color_interpolator((curr - start) / (float)(exit_anim_duration));
-		base_color = merge_color(finish_colors[(b + 1) % blocks_size], finish_colors[b], color_percent);
+		base_color = merge_color(get_finish_color((b + 1) % blocks_size), get_finish_color(b), color_percent);
 		for(i = 0; i < line_cnt; i++){
 			// make lines move around the middle point periodly
 			// the delay makes the trinkle effect
@@ -244,7 +264,7 @@ void exit_anim(int b){
 void finish_anim(int b){
 	int i;
 	for(i = line_cnt - 1; i >= 0; i--){
-		color_line(b, i, finish_colors[b]);
+		color_line(b, i, get_finish_color(b));
 		msleep(finish_anim_period);
 	}
 	exit_anim(b);
@@ -261,7 +281,7 @@ void swap(int b, int i, int j){
 	int t = arrs[b][i];
 	arrs[b][i] = arrs[b][j];
 	arrs[b][j] = t;
-	color_line(b, i, active_colors[b]);
+	color_line(b, i, get_active_color(b));
 	// highlight the last swap line
 	draw_highlight_line(b, j);
 	msleep(swap_period);
@@ -340,8 +360,8 @@ void set_progress(int b, int pro){
 	int y = 10;
 	int i;
 	for(i = 0; i < 3; i++){
-		line(x, y+i, x+block_width, y+i, finish_colors[0]);
-		line(x, y+i, x+pro, y+i, active_colors[b]);
+		line(x, y+i, x+block_width, y+i, get_finish_color(0));
+		line(x, y+i, x+pro, y+i, get_active_color(b));
 	}
 }
 
@@ -350,11 +370,11 @@ void control(void *p){
 	
 	// 默认优先级已经是最高优先级
 	setpriority(task_getid(), 0);
-	setpriority(tasks[0].tid, p1);
-	setpriority(tasks[1].tid, p2);
+	//setpriority(tasks[0].tid, p1);
+	//setpriority(tasks[1].tid, p2);
 	
-	set_progress(0, p1);
-	set_progress(1, p2);
+	//set_progress(0, p1);
+	//set_progress(1, p2);
 	
 	#define UP 0x4800
 	#define DOWN 0x5000
@@ -399,7 +419,7 @@ void control(void *p){
 	task_exit(0);
 }
 
-void thread_priority_test(){
+void sem_test(){
 	init_params();
 	
 	// random array
@@ -412,8 +432,9 @@ void thread_priority_test(){
 	}
 	
 	// new thread
-	new_sort_thread(bubble_sort, arr);
-	new_sort_thread(bubble_sort, arr);
+	for(i = 0; i < blocks_size; i++){
+		new_sort_thread(bubble_sort, arr);
+	}
 
 	/*
 	unsigned char * stack;

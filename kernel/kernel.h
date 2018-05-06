@@ -84,7 +84,7 @@ struct tcb {
 #define TASK_STATE_ZOMBIE    2
 
     int         timeslice;   //时间片
-#define TASK_TIMESLICE_DEFAULT 4
+#define TASK_TIMESLICE_DEFAULT 2
 
     int         code_exit;   //保存该线程的退出代码
     struct wait_queue *wq_exit; //等待该线程退出的队列

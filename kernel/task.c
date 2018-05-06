@@ -43,6 +43,7 @@ void schedule(){
                  //fixedpt_toint(fixedpt_div(tsk->estcpu, fixedpt_fromint(4))) - 
                  fixedpt_toint(tsk->estcpu) / 4 - 
                  (tsk->nice)*2;
+		
 		// 选择除task0和running之外的优先级最高的线程，若没有，则select为空
 		if(tsk->tid != 0 && tsk != g_task_running && tsk->state == TASK_STATE_READY && (select == NULL || tsk->priority > select->priority)){
 			select = tsk;
@@ -77,6 +78,10 @@ void schedule(){
 		return;
 	}
 	else{
+		int ticks = (keep_running_curr_ticks - keep_running_start_ticks);
+		if(ticks == 5){
+		printk("scheduled: recently tsk%d keep running %d ticks\n", g_task_running->tid, ticks);
+		}
 		keep_running_start_ticks = select->ticks;
 		keep_running_curr_ticks = select->ticks;
 	}
@@ -97,7 +102,7 @@ void schedule(){
     g_resched = 0;
     switch_to(select);
 }
- 
+
 void schedule_round_robin()
 {
     struct tcb *select = g_task_running;
@@ -257,7 +262,7 @@ struct tcb *sys_task_create(void *tos,
     new->timeslice = TASK_TIMESLICE_DEFAULT;
     new->wq_exit = NULL;
     new->next = NULL;
-	new->nice = 20;
+	new->nice = -NZERO; // 静态优先级初始化为最高优先级
 	new->priority = 0;
 	new->estcpu = fixedpt_fromint(0);
 	new->ticks = 0;
@@ -365,7 +370,6 @@ void sys_task_yield()
 }
 
 int sys_get_priority(int tid){
-	disable_irq(0);
 	struct tcb * tsk;
 	uint32_t flags;
 	save_flags_cli(flags);
@@ -381,12 +385,10 @@ int sys_get_priority(int tid){
 	if(tsk != NULL){
 		prio = tsk->nice + NZERO;
 	}
-	enable_irq(0);
 	return prio;
 }
 
 int sys_set_priority(int tid, int prio){
-	disable_irq(0);
 	struct tcb * tsk;
 	uint32_t flags;
 	save_flags_cli(flags);
@@ -398,11 +400,14 @@ int sys_set_priority(int tid, int prio){
 	}
 	restore_flags(flags);
 	
-	enable_irq(0);
 	if(tsk == NULL){
 		return -1;
 	}
 	else{
+		if(prio < -NZERO)
+			prio = -NZERO;
+		else if(prio >= NZERO)
+			prio = NZERO - 1;
 		tsk->nice = prio - NZERO;
 		return 0;
 	}
