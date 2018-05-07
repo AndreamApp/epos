@@ -71,6 +71,7 @@ COLORREF intense(int b, int i, COLORREF color){
 	else{
 		B %= 255;
 	}
+	return color;
 	return RGB(R, G, B);
 }
 

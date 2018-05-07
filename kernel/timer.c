@@ -48,7 +48,7 @@ void isr_timer(uint32_t irq, struct context *ctx)
 
             //如果当前线程用完了时间片，也要强制调度
             if(g_task_running->timeslice <= 0) {
-                g_resched = 1;
+                //g_resched = 1;
                 g_task_running->timeslice = TASK_TIMESLICE_DEFAULT;
             }
 			
