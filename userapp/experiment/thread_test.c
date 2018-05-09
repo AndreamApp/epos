@@ -39,21 +39,8 @@ int new_sort_thread(void (*sort)(int block, int * arr, int len), int * arr){
 	return tasks[i].tid;
 }
 
-int debug = 0;
-void init_params(){
-	if(debug) {
-		init_draw_params(100, 100, 6);
-	}
-	else{
-		init_graphic(0x143);
-		int width = g_graphic_dev.XResolution;
-		int height = g_graphic_dev.YResolution;
-		init_draw_params(width, height, 6);
-	}
-}
-
 void thread_sort_test(){
-	init_params();
+	init_draw(0);
 	
 	// random array
 	srand(time(NULL));

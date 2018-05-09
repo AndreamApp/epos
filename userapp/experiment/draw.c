@@ -11,6 +11,18 @@ void init_draw_params(int w, int h, int blocks){
 	line_cnt = (int) (block_height / (margin + line_height));
 }
 
+void init_draw(int debug){
+	if(debug) {
+		init_draw_params(100, 100, 10);
+	}
+	else{
+		init_graphic(0x143);
+		int width = g_graphic_dev.XResolution;
+		int height = g_graphic_dev.YResolution;
+		init_draw_params(width, height, 10);
+	}
+}
+
 int color_size = 6;
 COLORREF init_colors[MAX] = {
 	RGB(214, 188, 255), RGB(220, 247, 161), RGB(255, 120, 120), RGB(186, 212, 170), RGB(172, 208, 206), RGB(247, 223, 131), 
@@ -133,6 +145,9 @@ void draw_highlight_line(int b, int i){
 	color_line(b, i, get_highlight_color(b));
 }
 
+void clear_highlight(int b){
+	color_line(b, hightlight_line[b], get_active_color(b));
+}
 
 // 0 <= pro <= 2*NZERO-1
 void set_progress(int b, int pro){

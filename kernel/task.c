@@ -32,7 +32,7 @@ struct tcb *g_task_own_fpu;
  *
  * 注意：该函数的执行不能被中断
  */
-#define KEEP_RUNNING_THRESH 100
+#define KEEP_RUNNING_THRESH 10
 int keep_running_start_ticks = 0;
 int keep_running_curr_ticks = 0;
 void schedule(){

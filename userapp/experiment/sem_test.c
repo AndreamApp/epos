@@ -2,24 +2,16 @@
 #include "sort.c"
 #include "anim.c"
 
-int blocks;
-
 int pid, cid;
 
-int debug = 0;
-void init_params(){
-	if(debug) {
-		init_draw_params(100, 100, 10);
-	}
-	else{
-		init_graphic(0x143);
-		int width = g_graphic_dev.XResolution;
-		int height = g_graphic_dev.YResolution;
-		init_draw_params(width, height, 10);
-	}
-}
+int full;
+int empty;
 
 #define NZERO 20
+#define UP 0x4800
+#define DOWN 0x5000
+#define LEFT 0x4d00
+#define RIGHT 0x4b00
 
 void control(void *p){
 	int p1 = 20, p2 = 20;
@@ -32,10 +24,6 @@ void control(void *p){
 	set_progress(0, p1);
 	set_progress(1, p2);
 	
-	#define UP 0x4800
-	#define DOWN 0x5000
-	#define LEFT 0x4d00
-	#define RIGHT 0x4b00
 	int key;
 	while(1){
 		key = getchar();
@@ -68,11 +56,7 @@ void control(void *p){
 			}
 		}
 	}
-	task_exit(0);
 }
-
-int full;
-int empty;
 
 void produce(void *p){
 	int i;
@@ -116,13 +100,14 @@ void consume(void *p){
 		b = i % blocks_size;
 		sorter[i%6](b, arrs[b], line_cnt);
 		//finish_anim(i);
+		clear_highlight(b);
 		
 		sem_signal(empty);
 	}
 }
 
 void sem_test(){
-	init_params();
+	init_draw(0);
 	
 	// 创建两个信号量，有多少个资源就设置empty值为多少
 	full = sem_create(0);

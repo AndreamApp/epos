@@ -3,6 +3,10 @@
 #include "anim.c"
 
 #define NZERO 20
+#define UP 0x4800
+#define DOWN 0x5000
+#define LEFT 0x4d00
+#define RIGHT 0x4b00
 
 int blocks;
 struct sort_task{
@@ -53,10 +57,6 @@ void control(void *p){
 	set_progress(0, p1);
 	set_progress(1, p2);
 	
-	#define UP 0x4800
-	#define DOWN 0x5000
-	#define LEFT 0x4d00
-	#define RIGHT 0x4b00
 	int key;
 	while(1){
 		key = getchar();
@@ -65,7 +65,6 @@ void control(void *p){
 				p1++;
 				setpriority(tasks[0].tid, p1);
 				set_progress(0, p1);
-				printf("set priority: task %d(%d)\n", tasks[0].tid, p1);
 			}
 		}
 		else if(DOWN == key){
@@ -73,7 +72,6 @@ void control(void *p){
 				p1--;
 				setpriority(tasks[0].tid, p1);
 				set_progress(0, p1);
-				printf("set priority: task %d(%d)\n", tasks[0].tid, p1);
 			}
 		}
 		else if(LEFT == key){
@@ -81,7 +79,6 @@ void control(void *p){
 				p2++;
 				setpriority(tasks[1].tid, p2);
 				set_progress(1, p2);
-				printf("set priority: task %d(%d)\n", tasks[1].tid, p2);
 			}
 		}
 		else if(RIGHT == key){
@@ -89,28 +86,13 @@ void control(void *p){
 				p2--;
 				setpriority(tasks[1].tid, p2);
 				set_progress(1, p2);
-				printf("set priority: task %d(%d)\n", tasks[1].tid, p2);
 			}
 		}
-	}
-	task_exit(0);
-}
-
-int debug = 0;
-void init_params(){
-	if(debug) {
-		init_draw_params(100, 100, 2);
-	}
-	else{
-		init_graphic(0x143);
-		int width = g_graphic_dev.XResolution;
-		int height = g_graphic_dev.YResolution;
-		init_draw_params(width, height, 2);
 	}
 }
 
 void thread_priority_test(){
-	init_params();
+	init_draw(0);
 	
 	// random array
 	srand(time(NULL));

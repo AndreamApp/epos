@@ -14,6 +14,8 @@ int hightlight_line[MAX];
 
 void init_draw_params(int w, int h, int blocks);
 
+void init_draw(int debug);
+
 COLORREF get_init_color(int b);
 
 COLORREF get_active_color(int b);
