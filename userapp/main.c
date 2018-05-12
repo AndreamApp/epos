@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include "graphics.h"
-#include "experiment/sem_test.c"
 
 extern void *tlsf_create_with_pool(void* mem, size_t bytes);
 extern void *g_heap;
@@ -38,7 +36,9 @@ void main(void *pv)
             task_getid(), pv);
 
     //TODO: Your code goes here
-	sem_test();
+	
+	test_allocator();
+	
     while(1);
     task_exit(0);
 }

@@ -13,13 +13,13 @@ void init_draw_params(int w, int h, int blocks){
 
 void init_draw(int debug){
 	if(debug) {
-		init_draw_params(100, 100, 10);
+		init_draw_params(100, 100, 2);
 	}
 	else{
 		init_graphic(0x143);
 		int width = g_graphic_dev.XResolution;
 		int height = g_graphic_dev.YResolution;
-		init_draw_params(width, height, 10);
+		init_draw_params(width, height, 2);
 	}
 }
 

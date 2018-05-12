@@ -32,23 +32,70 @@ void *tlsf_create_with_pool(uint8_t *heap_base, size_t heap_size)
     return NULL;
 }
 
+#define CHUNK_SIZE sizeof(struct chunk)
+
+// ? CHUNK_SIZE是否计算在size中？
 void *malloc(size_t size)
 {
+	if(size == 0){
+		return NULL;
+	}
+	struct chunk * chk = chunk_head;
+	while(chk != NULL){
+		if(chk->state == FREE && chk->size >= (size + CHUNK_SIZE)){
+			// 找到一块足够大的连续的空闲内存
+			struct chunk * nxt = (struct chunk *) ((uint8_t *)chk + size + CHUNK_SIZE);
+			strncpy(nxt->signature, "OSEX", 4);
+			nxt->next = chk->next;
+			nxt->state = FREE;
+			nxt->size = chk->size - size - CHUNK_SIZE;
+			
+			chk->next = nxt;
+			chk->state = USED;
+			chk->size = size;
+			// 返回分配的内存空间首地址
+			return (void *)(chk + 1);
+		}
+		chk = chk->next;
+	}
     return NULL;
 }
 
+// ? 不能合并前一个空闲块吗？
 void free(void *ptr)
 {
+	if(ptr == NULL){
+		return;
+	}
+	struct chunk * chk = ((struct chunk *) ptr) - 1;
+	if(strncmp(chk->signature, "OSEX", 4) == 0){
+		chk->state = FREE;
+		// 如果下一块也是FREE，合并
+		chk = chunk_head;
+		while(chk->next != NULL && chk->next->state == FREE){
+			chk->size += chk->next->size + CHUNK_SIZE;
+			chk->next = chk->next->next;
+		}
+	}
 }
 
 void *calloc(size_t num, size_t size)
 {
-    return NULL;
+	void * ptr = malloc(num * size);
+	memset(ptr, 0, num * size);
+    return ptr;
 }
 
 void *realloc(void *oldptr, size_t size)
 {
-    return NULL;
+	void * ptr = NULL;
+	if(oldptr != NULL){
+		free(oldptr);
+	}
+	if(size > 0){
+		ptr = malloc(size);
+	}
+    return ptr;
 }
 
 /*************D O  N O T  T O U C H  A N Y T H I N G  B E L O W*************/

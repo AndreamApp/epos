@@ -18,7 +18,7 @@ COBJS+=	lib/sysconf.o lib/math.o lib/stdio.o lib/stdlib.o \
 		lib/qsort.o
 COBJS+=	../lib/softfloat.o ../lib/string.o ../lib/memcpy.o \
 		../lib/memset.o ../lib/snprintf.o
-COBJS+=	lib/malloc.o ../lib/tlsf/tlsf.o
+COBJS+=	myalloc.o
 
 OBJS=	lib/crt0.o lib/setjmp.o lib/syscall-wrapper.o $(COBJS)
 

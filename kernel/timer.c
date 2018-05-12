@@ -176,7 +176,7 @@ static void do_sleep (unsigned num, unsigned denom)
      ---------------------- = NUM * HZ / DENOM ticks.
         1 s / HZ ticks
   */
-  unsigned ticks = num * HZ / denom;
+  unsigned ticks = (unsigned)((double)num / denom * HZ);
 
   if (ticks > 0)
     {
@@ -195,16 +195,26 @@ static void do_sleep (unsigned num, unsigned denom)
 
 unsigned sys_sleep(unsigned seconds)
 {
+    //do_sleep(seconds, 1);
     do_sleep(seconds, 1000);
     return 0;
 }
 
 int sys_nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
-	//printk("nanosleep %ds %dns\n", rqtp->tv_sec, rqtp->tv_nsec);
     if(rqtp->tv_sec > 0)
         do_sleep(rqtp->tv_sec, 1);
-    if(rqtp->tv_nsec > 0)
-        do_sleep(rqtp->tv_nsec, 1000 * 1000 * 1000);
+	
+	long nsec = rqtp->tv_nsec,
+	     nhz = 1000*1000*1000 / HZ;
+	
+	long ticks = nsec / nhz;
+	if(ticks > 0){
+		do_sleep(ticks, HZ);
+		nsec %= nhz;
+	}
+	
+    if(nsec > 0)
+        do_sleep(nsec, 1000 * 1000 * 1000);
     return 0;
 }

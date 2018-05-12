@@ -42,7 +42,9 @@ int * arrs[MAX];
  */
 int msleep(const uint32_t msec)
 {
-	return sleep(msec);
+	struct timespec ts={0,1000000*msec};
+	return nanosleep(&ts, NULL);
 }
+
 
 #endif
