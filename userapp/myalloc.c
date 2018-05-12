@@ -18,6 +18,8 @@ struct chunk {
     int size;           /* size of this chunk */
 };
 
+// TODO: Thread safe
+
 #define CHUNK_SIZE sizeof(struct chunk)
 
 static struct chunk *chunk_head;
@@ -57,10 +59,8 @@ void *malloc(size_t size)
 			// 找到一块足够大的连续的空闲内存
 			if(chk->size >= (size + CHUNK_SIZE*2)){
 				struct chunk * nxt = (struct chunk *) ((uint8_t *)chk + size + CHUNK_SIZE);
-				strncpy(nxt->signature, "OSEX", 4);
-				nxt->next = chk->next;
-				nxt->state = FREE;
-				nxt->size = chk->size - size - CHUNK_SIZE;
+				memcpy(nxt, chk, CHUNK_SIZE);
+				nxt->size -= size + CHUNK_SIZE;
 				
 				chk->next = nxt;
 				chk->state = USED;
