@@ -18,6 +18,8 @@ struct chunk {
     int size;           /* size of this chunk */
 };
 
+#define CHUNK_SIZE sizeof(struct chunk)
+
 static struct chunk *chunk_head;
 
 void *g_heap;
@@ -32,36 +34,59 @@ void *tlsf_create_with_pool(uint8_t *heap_base, size_t heap_size)
     return NULL;
 }
 
-#define CHUNK_SIZE sizeof(struct chunk)
+void debug(){
+	printf("\n");
+	struct chunk * chk = chunk_head;
+	while(chk != NULL){
+		printf("%s(%d) ", chk->state == FREE ? "FREE" : "USED", chk->size);
+		chk = chk->next;
+	}
+	printf("\n");
+}
 
-// ? CHUNK_SIZE是否计算在size中？
+// ? CHUNK_SIZE是否计算在size中？看来是要计算的
 void *malloc(size_t size)
 {
 	if(size == 0){
 		return NULL;
 	}
+	int find = 0;
 	struct chunk * chk = chunk_head;
 	while(chk != NULL){
-		if(chk->state == FREE && chk->size >= (size + CHUNK_SIZE)){
+		if(chk->state == FREE){
 			// 找到一块足够大的连续的空闲内存
-			struct chunk * nxt = (struct chunk *) ((uint8_t *)chk + size + CHUNK_SIZE);
-			strncpy(nxt->signature, "OSEX", 4);
-			nxt->next = chk->next;
-			nxt->state = FREE;
-			nxt->size = chk->size - size - CHUNK_SIZE;
-			
-			chk->next = nxt;
-			chk->state = USED;
-			chk->size = size;
-			// 返回分配的内存空间首地址
-			return (void *)(chk + 1);
+			if(chk->size >= (size + CHUNK_SIZE*2)){
+				struct chunk * nxt = (struct chunk *) ((uint8_t *)chk + size + CHUNK_SIZE);
+				strncpy(nxt->signature, "OSEX", 4);
+				nxt->next = chk->next;
+				nxt->state = FREE;
+				nxt->size = chk->size - size - CHUNK_SIZE;
+				
+				chk->next = nxt;
+				chk->state = USED;
+				chk->size = size + CHUNK_SIZE;
+				find = 1;
+				break;
+			}
+			else if(chk->size == (size + CHUNK_SIZE)){
+				chk->state = USED;
+				find = 1;
+				break;
+			}
 		}
 		chk = chk->next;
 	}
-    return NULL;
+	
+	if(find){
+		//debug();
+		return (void *)(chk + 1);
+	}
+	else{
+		return NULL;
+	}
 }
 
-// ? 不能合并前一个空闲块吗？
+// ? 不能合并前一个空闲块吗？不是双向链表，只能从头遍历了
 void free(void *ptr)
 {
 	if(ptr == NULL){
@@ -72,11 +97,17 @@ void free(void *ptr)
 		chk->state = FREE;
 		// 如果下一块也是FREE，合并
 		chk = chunk_head;
-		while(chk->next != NULL && chk->next->state == FREE){
-			chk->size += chk->next->size + CHUNK_SIZE;
-			chk->next = chk->next->next;
+		while(chk->next != NULL){
+			if(chk->state == FREE && chk->next->state == FREE){
+				chk->size += chk->next->size;
+				chk->next = chk->next->next;
+			}
+			else{
+				chk = chk->next;
+			}
 		}
 	}
+	//debug();
 }
 
 void *calloc(size_t num, size_t size)
